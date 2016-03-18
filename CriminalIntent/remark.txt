@@ -93,3 +93,53 @@ fragment中的AlertDialog则不会有此问题。
 activity方法。处理activity间的数据返回时，无需亲自动手，ActivityManager会自动调用Activity.
 onActivityResult(...)方法。父activity接收到Activity.onActivityResult(...)方法的调用
 后，其FragmentManager会调用对应fragment的Fragment.onActivityResult(...)方法
+
+第16章 操作栏
+16.1 选项菜单
+16.1.1 在XML文件中定义选项菜单
+16.1.2 创建选项菜单
+	在代码中，Activity类提供了管理选项菜单的回调函数。在需要选项菜单时，Android会调
+用Activity的onCreateOptionsMenu(Menu)方法。
+	然而，按照CriminalIntent应用的设计，选项菜单相关的回调函数需在fragment而非activity里
+实现。不用担心，Fragment也有自己的一套选项菜单回调函数
+16.1.3 响应菜单项选择
+	用户点击选项菜单中的菜单项时，fragment会收到onOptionsItemSelected(MenuItem)方
+法的回调请求。该方法接受的传入参数是一个描述用户选择的MenuItem实例。
+16.2 实现层级式导航
+	目前为止，CriminalIntent应用主要依靠后退键在应用内导航。使用后退键的导航又称为临时
+性导航，只能返回到上一次的用户界面。而Ancestral navigation，有时也称为层级式导航
+（hierarchical navigation），可逐级向上在应用内导航。
+16.2.1 启用应用图标的导航功能
+	为启用应用图标向上导航按钮的功能，并在fragment视图上显示向左的图标，须调用以下方
+法设置fragment的DisplayHomeAsUpEnabled属性：
+	该方法来自于API 11级，因此需进行系统版本判断保证应用向下兼容，并使用@TargetApi(11)
+注解阻止Android Lint报告兼容性问题。
+	在CrimeFragment.onCreateView(...)中，调用setDisplayHomeAsUpEnabled(true)方法。
+	调用setDisplayHomeAsUpEnabled(...)方法只是让应用图标转变为按钮，并显示
+一个向左的图标而已。因此我们必须进行编码，实现点击按钮可向上逐级回退的功能
+16.2.2 响应向上按钮
+	为实现用户点击向上按钮返回至crime列表界面，我们可能会想到去创建一个intent，然后启
+动CrimePagerActivity实例，如以下实现代码：
+	FLAG_ACTIVITY_CLEAR_TOP指示Android在回退栈中寻找指定activity的存在实例，如图16-10
+所示。如存在，则弹出栈中的所有其他activity，让启动的activity出现在栈顶，从而显示在屏幕上。
+	然而，Android有更好的办法实现层级式导航：配合使用NavUtils便利类与manifest配置文件中的元数据。
+	先来处理元数据。打开AndroidManifest.xml文件，在CrimePagerActivity声明中添加新的
+meta-data属性，指定CrimePagerActivity的父类为CrimeListActivity。
+
+	在CrimeFragment.onOptionsItemSelected(...)方法中，首先通过调用NavUtils.get-
+ParentActivityName(Activity)方法，检查元数据中是否指定了父activity。如指定有父activity，
+则调用navigateUpFromSameTask(Activity)方法，导航至父activity界面
+
+	为什么使用NavUtils类要好于手动启动activity？首先，NavUtils类的实现代码既简洁又优
+雅。其次，使用NavUtils类也可实现在manifest配置文件中统一管理activity间的关系。如果activity
+间的关系发生改变，无需费力地去修改Java代码，我们只要简单修改配置文件中的一行代码即可。
+16.3 可选菜单项
+16.3.1 创建可选菜单XML文件
+16.3.3 “还有个问题”
+	这个问题就是经典的设备旋转问题。子标题显示后，旋转设备，这时因为用户界面的重新生
+成，显示的子标题会消失。为解决此问题，需要一个实例变量记录子标题的显示状态，并且设置
+保留CrimeListFragment，使得变量值在设备旋转后依然可用。
+16.4 挑战练习：用于列表的空视图
+	
+	
+

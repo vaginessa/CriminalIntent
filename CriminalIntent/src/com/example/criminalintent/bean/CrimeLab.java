@@ -27,12 +27,12 @@ public class CrimeLab {
 		mAppContext = mContext;
 		mCrimes = new ArrayList<Crime>();
 		//100条假数据
-		for (int i = 0; i < 100; i++) {
+		/*for (int i = 0; i < 100; i++) {
 			Crime c = new Crime();
 			c.setmTitle("Crime #"+i);
 			c.setmSolved(i%2 == 0);
 			mCrimes.add(c);
-		}
+		}*/
 	}
 	
 	public static CrimeLab get(Context c){
@@ -60,6 +60,14 @@ public class CrimeLab {
 			}
 		}
 		return null;
+	}
+	/**
+	 * 为响应用户点击New Crime菜单项，需实现新方法以添加新的Crime到crime数组列表中。
+	 * @param crime
+	 */
+	public void addCrime(Crime crime){
+		
+		mCrimes.add(crime);
 	}
 }
 

@@ -5,13 +5,16 @@ import java.util.UUID;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.app.NavUtils;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -60,6 +63,10 @@ public class CrimeFragment extends Fragment {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		//首先应通知FragmentManager：CrimeFragment将代表其托管
+		//activity 实现选项菜单相关的回调方法
+		setHasOptionsMenu(true);
+		
 		//mCrime = new Crime();
 		//简单的获取方式
 		//UUID crimeId = (UUID)getActivity().getIntent().getSerializableExtra(EXTRA_CRIME_ID);
@@ -67,6 +74,8 @@ public class CrimeFragment extends Fragment {
 		//获取argument
 		UUID crimeId = (UUID)getArguments().getSerializable(EXTRA_CRIME_ID);
 		mCrime = CrimeLab.get(getActivity()).getCrime(crimeId);
+	
+	
 	}
 	
 	/** 创建和配置fragment视图 ,将生成的View 返回给托管activity**/
@@ -76,6 +85,15 @@ public class CrimeFragment extends Fragment {
 			@Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
 		
 		View view = inflater.inflate(R.layout.fragment_crime, container,false);
+		
+		
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+			if (NavUtils.getParentActivityName(getActivity()) != null) {
+				
+				//启用应用图标向上导航按钮的功能，并在fragment视图上显示向左的图标
+				getActivity().getActionBar().setDisplayHomeAsUpEnabled(true);
+			}
+		}
 		
 		mTitleFil = (EditText) view.findViewById(R.id.crime_title);
 		mTitleFil.setText(mCrime.getmTitle());
@@ -188,5 +206,28 @@ public class CrimeFragment extends Fragment {
 	private void updateDate() {
 		
 		mDateButton.setText(mCrime.getmDate().toString());
+	}
+	
+	/**
+	 * 覆盖onOptionsItemSelected(MenuItem)方法，响应用户对该菜单项
+		的点击事件
+		无需在XML文件中定义或生成应用图标菜单项。它已具有现成的资源ID：android.R.id.home。
+	 */
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+		case android.R.id.home:
+			//调用NavUtils.get-ParentActivityName(Activity)方法，检查元数据中是否指定了父activity。如指定有父activity，
+			//则调用navigateUpFromSameTask(Activity)方法，导航至父activity界面。
+			if (NavUtils.getParentActivityName(getActivity()) != null) {
+				
+				NavUtils.navigateUpFromSameTask(getActivity());
+			}
+			return true;
+
+		default:
+			return super.onOptionsItemSelected(item);
+		}
+		
 	}
 }

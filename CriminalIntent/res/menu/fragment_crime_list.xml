@@ -1,0 +1,17 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="com.example.criminalintent.CrimeActivity" >
+
+    <!-- showAsAction属性用于指定菜单选项是显示在操作栏上，还是隐藏到溢出菜单（overflow
+menu）中。该属性当前设置为ifRoom和withText的一个组合值。因此，只要空间足够，菜单项
+图标及其文字描述都会显示在操作栏上 
+		属性showAsAction还有另外两个可选值：always和never。不推荐使用always，应尽量使
+用更为方便的ifRoom属性值，让操作系统决定如何显示菜单项。
+	-->
+    <item
+        android:id="@+id/menu_item_new_crime"
+        android:icon="@android:drawable/ic_menu_add"
+        android:title="@string/new_crime"
+        android:showAsAction="ifRoom|withText"/>
+
+</menu>

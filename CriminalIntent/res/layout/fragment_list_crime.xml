@@ -1,0 +1,16 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:id="@+id/fragmentContainer" >
+
+	<ListView 
+	    android:layout_width="match_parent"
+    	android:layout_height="match_parent"
+    	android:id="@+id/list_crime"/>
+	<!-- 空数据视图显示 -->
+	<View 
+	    android:layout_width="match_parent"
+    	android:layout_height="match_parent"
+    	android:id="@+id/list_empty"/>
+</FrameLayout>

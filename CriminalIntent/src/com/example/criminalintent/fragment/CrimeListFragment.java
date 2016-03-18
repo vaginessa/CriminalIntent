@@ -3,12 +3,17 @@ package com.example.criminalintent.fragment;
 import java.util.ArrayList;
 
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.ListFragment;
+import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ListView;
 
-import com.example.criminalintent.CrimeActivity;
 import com.example.criminalintent.CrimePagerActivity;
 import com.example.criminalintent.R;
 import com.example.criminalintent.adapter.CrimeAdapter;
@@ -28,10 +33,27 @@ public class CrimeListFragment extends ListFragment {
 	private ArrayList<Crime> mCrimes;
 	
 	private CrimeAdapter adapter;
+	/**
+	 * 
+	 * 解决子标题显示后，旋转设备，这时因为用户界面的重新生
+成，显示的子标题会消失。问题
+	 * 
+	 * 添加一个布尔类型的成员变量，在onCreate(...)方法中保留
+CrimeListFragment并对变量进行初始化
+	 */
+	private boolean mSubtitleVisible;
+	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-	
+		//通知FragmentManager：CrimeListFragment需接收选项菜单方法回调
+		setHasOptionsMenu(true);
+		
+		//方法可保留fragment。已保留的fragment不会随activity一起被销毁
+		//使得mSubtitleVisible变量在设备旋转后依然可用
+		setRetainInstance(true);
+		mSubtitleVisible = false;
+		
 		//设置托管CrimeListFragment的activity标题
 		getActivity().setTitle(R.string.crime_title);
 		mCrimes = CrimeLab.get(getActivity()).getmCrimes();
@@ -46,6 +68,22 @@ public class CrimeListFragment extends ListFragment {
 		//使用自定义adapter
 		adapter = new CrimeAdapter(getActivity(), mCrimes);
 		setListAdapter(adapter);
+	}
+	
+	@Override
+	public View onCreateView(LayoutInflater inflater, ViewGroup container,
+			Bundle savedInstanceState) {
+		
+		View view = super.onCreateView(inflater, container, savedInstanceState);
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+			//根据变量mSubtitleVisible的值确定是否要设置子标题
+			if (mSubtitleVisible) {
+				
+				getActivity().getActionBar().setSubtitle(R.string.subtitle);
+			}
+		}
+		return view;
+		
 	}
 	//CheckBox默认是可聚焦的。这意味着，点击列表项会被解读为切换CheckBox
 	//的状态，自然也就无法触发onListItemClick(...)方法了
@@ -85,6 +123,55 @@ public class CrimeListFragment extends ListFragment {
 	//生返回结果(不具有任何setResult(...)方法)。只有activity拥有返回结果
 	@Override
 	public void onActivityResult(int requestCode, int resultCode, Intent data) {
-		super.onActivityResult(requestCode, resultCode, data);
+		
+		((CrimeAdapter)getListAdapter()).notifyDataSetChanged();
+	}
+	/**
+	 * 实例化生成选项菜单
+	 */
+	@Override
+	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+		super.onCreateOptionsMenu(menu, inflater);
+		
+		inflater.inflate(R.menu.fragment_crime_list, menu);
+		//查看子标题的状态，以保证菜单项标题与之匹配显示
+		MenuItem showSubtitleItem = menu.findItem(R.id.menu_item_show_subtitle);
+		
+		if (mSubtitleVisible && showSubtitleItem != null) {
+			
+			showSubtitleItem.setTitle(R.string.hide_subtitle);
+		}
+	}
+	
+	/**
+	 * 实现onOptionsItemSelected(MenuItem)方法响应菜单项的选择事件
+	 */
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+		case R.id.menu_item_new_crime:
+			Crime crime = new Crime();
+			CrimeLab.get(getActivity()).addCrime(crime);
+			Intent intent = new Intent(getActivity(), CrimePagerActivity.class);
+			intent.putExtra(CrimeFragment.EXTRA_CRIME_ID, crime.getmId());
+			startActivityForResult(intent, 0);
+			return true;
+		case R.id.menu_item_show_subtitle:
+			//切换菜单项标题,实现显示或隐藏CrimeListActivity操作栏的子标题
+			if (getActivity().getActionBar().getSubtitle() == null) {
+				
+				getActivity().getActionBar().setSubtitle(R.string.subtitle);
+				item.setTitle(R.string.hide_subtitle);
+				mSubtitleVisible = true;
+			} else {
+				
+				getActivity().getActionBar().setSubtitle(null);
+				item.setTitle(R.string.show_subtitle);
+				mSubtitleVisible = false;
+			}
+			return true;
+		default:
+			return super.onOptionsItemSelected(item);
+		}
 	}
 }
