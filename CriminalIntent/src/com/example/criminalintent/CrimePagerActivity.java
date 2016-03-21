@@ -11,6 +11,7 @@ import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v4.view.ViewPager.OnPageChangeListener;
 
+import com.actionbarsherlock.app.SherlockFragmentActivity;
 import com.example.criminalintent.bean.Crime;
 import com.example.criminalintent.bean.CrimeLab;
 import com.example.criminalintent.fragment.CrimeFragment;
@@ -22,7 +23,7 @@ import com.example.criminalintent.fragment.CrimeFragment;
  * 描述：将取代CrimeActivity。其布局将由一个ViewPager组成。
  *  其任务是创建并管理ViewPager
  */
-public class CrimePagerActivity extends FragmentActivity {
+public class CrimePagerActivity extends SherlockFragmentActivity {
 	//可通过调用setOffscreenPageLimit(int)方法，定制预加载相邻页面的数目
 	private ViewPager mViewPager;
 	private ArrayList<Crime> mCrimes;

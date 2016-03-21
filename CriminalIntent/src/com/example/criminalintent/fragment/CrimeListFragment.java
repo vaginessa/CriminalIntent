@@ -5,15 +5,22 @@ import java.util.ArrayList;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.v4.app.ListFragment;
+import android.view.ActionMode;
+import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ContextMenu.ContextMenuInfo;
+import android.widget.AbsListView.MultiChoiceModeListener;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.ListView;
+import android.widget.AdapterView.AdapterContextMenuInfo;
 
+import com.actionbarsherlock.app.SherlockListFragment;
 import com.example.criminalintent.CrimePagerActivity;
 import com.example.criminalintent.R;
 import com.example.criminalintent.adapter.CrimeAdapter;
@@ -27,7 +34,7 @@ import com.example.criminalintent.bean.CrimeLab;
  * 描述：
  * ListFragment类默认实现方法已生成了一个全屏ListView布局
  */
-public class CrimeListFragment extends ListFragment {
+public class CrimeListFragment extends SherlockListFragment {
 
 	private static final String TAG = "CrimeListFragment";
 	private ArrayList<Crime> mCrimes;
@@ -79,8 +86,20 @@ CrimeListFragment并对变量进行初始化
 			//根据变量mSubtitleVisible的值确定是否要设置子标题
 			if (mSubtitleVisible) {
 				
-				getActivity().getActionBar().setSubtitle(R.string.subtitle);
+				//getActivity().getActionBar().setSubtitle(R.string.subtitle);
+				getSherlockActivity().getSupportActionBar().setSubtitle(R.string.subtitle);
 			}
+		}
+		
+		ListView listView = (ListView)view.findViewById(android.R.id.list);
+		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
+			
+			registerForContextMenu(listView);
+		}else {
+			
+			listView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE_MODAL);
+			
+			listView.setMultiChoiceModeListener(multiChoice);
 		}
 		return view;
 		
@@ -130,12 +149,12 @@ CrimeListFragment并对变量进行初始化
 	 * 实例化生成选项菜单
 	 */
 	@Override
-	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+	public void onCreateOptionsMenu(com.actionbarsherlock.view.Menu menu, com.actionbarsherlock.view.MenuInflater inflater) {
 		super.onCreateOptionsMenu(menu, inflater);
 		
 		inflater.inflate(R.menu.fragment_crime_list, menu);
 		//查看子标题的状态，以保证菜单项标题与之匹配显示
-		MenuItem showSubtitleItem = menu.findItem(R.id.menu_item_show_subtitle);
+		com.actionbarsherlock.view.MenuItem showSubtitleItem = menu.findItem(R.id.menu_item_show_subtitle);
 		
 		if (mSubtitleVisible && showSubtitleItem != null) {
 			
@@ -147,7 +166,7 @@ CrimeListFragment并对变量进行初始化
 	 * 实现onOptionsItemSelected(MenuItem)方法响应菜单项的选择事件
 	 */
 	@Override
-	public boolean onOptionsItemSelected(MenuItem item) {
+	public boolean onOptionsItemSelected(com.actionbarsherlock.view.MenuItem item) {
 		switch (item.getItemId()) {
 		case R.id.menu_item_new_crime:
 			Crime crime = new Crime();
@@ -158,7 +177,7 @@ CrimeListFragment并对变量进行初始化
 			return true;
 		case R.id.menu_item_show_subtitle:
 			//切换菜单项标题,实现显示或隐藏CrimeListActivity操作栏的子标题
-			if (getActivity().getActionBar().getSubtitle() == null) {
+			/*if (getActivity().getActionBar().getSubtitle() == null) {
 				
 				getActivity().getActionBar().setSubtitle(R.string.subtitle);
 				item.setTitle(R.string.hide_subtitle);
@@ -168,10 +187,130 @@ CrimeListFragment并对变量进行初始化
 				getActivity().getActionBar().setSubtitle(null);
 				item.setTitle(R.string.show_subtitle);
 				mSubtitleVisible = false;
+			}*/
+			if(getSherlockActivity().getSupportActionBar().getSubtitle() == null) {
+				
+				getSherlockActivity().getSupportActionBar().setSubtitle(R.string.subtitle);
+				item.setTitle(R.string.hide_subtitle);
+				mSubtitleVisible = true;
+			} else {
+				
+				getSherlockActivity().getSupportActionBar().setSubtitle(null);
+				item.setTitle(R.string.show_subtitle);
+				mSubtitleVisible = false;
 			}
+			
 			return true;
 		default:
 			return super.onOptionsItemSelected(item);
 		}
 	}
+	
+	/**
+	 * 当前我们只定义了一个上下文菜单资源，因此，无论用户长按的是哪个视图，菜单都是以该
+资源实例化生成的。假如定义了多个上下文菜单资源，通过检查传入onCreateContextMenu(...)
+方法的View视图ID，我们可以自由决定使用哪个资源来生成上下文菜单。
+	 */
+	@Override
+	public void onCreateContextMenu(ContextMenu menu, View v,
+			ContextMenuInfo menuInfo) {
+		
+		getActivity().getMenuInflater().inflate(R.menu.crime_list_item_context, menu);
+	}
+	
+	/**
+	 * 监听上下文菜单项选择事件
+	 */
+	@Override
+	public boolean onContextItemSelected(MenuItem item) {
+		/**
+		 * 以下代码中，因为ListView是AdapterView的子类，所以getMenuInfo()方法返回了一个
+AdapterView.AdapterContextMenuInfo实例。然后，将getMenuInfo()方法的返回结果进行
+类型转换，获取选中列表项在数据集中的位置信息。最后，使用列表项的位置，获取要删除的
+Crime对象。
+		 */
+		AdapterContextMenuInfo info = (AdapterContextMenuInfo)item.getMenuInfo();
+		int position = info.position;
+		CrimeAdapter adapter = (CrimeAdapter)getListAdapter();
+		Crime crime = adapter.getItem(position);
+		
+		switch (item.getItemId()) {
+		case R.id.menu_item_delete_crime:
+			
+			CrimeLab.get(getActivity()).delete(crime);
+			adapter.notifyDataSetChanged();
+			return true;
+		}
+		return super.onContextItemSelected(item);
+	}
+	
+	/**
+	 * 视图在选中或撤销选中时会触发它
+	 */
+	private MultiChoiceModeListener multiChoice = new MultiChoiceModeListener() {
+		
+		//2在onCreateActionMode(...)方法之后，以及当前上下文操作栏需要刷新显示新数据时调用。
+		@Override
+		public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+			return false;
+		}
+		//4在用户退出上下文操作模式或所选菜单项操作已被响应，从而导致ActionMode对象将要销毁时调用
+		//这里，也可完成在上下文操作模式下，响应菜单项操作而引发的相应fragment更新。
+		@Override
+		public void onDestroyActionMode(ActionMode mode) {
+			
+		}
+		//1在ActionMode对象创建后调用。也是实例化上下文菜单资源，并显示在上下文操作栏上的任务完成的地方
+		//系统自动产生的onCreateActionMode(...)存根方法会返回false值。记得将其改为返回true值，因为返回false值会导致操作模式创建失败。
+		@Override
+		public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+			//是从操作模式，而非activity中获取MenuInflater的
+			//操作模式负责对上下文操作栏进行配置.。例如，可调用ActionMode.setTitle(...),方法为上下文操作栏设置标题，而activity的MenuInflater则做不到这一点。
+			MenuInflater inflater = mode.getMenuInflater();
+			inflater.inflate(R.menu.crime_list_item_context, menu);
+			return true;
+		}
+		//3在用户选中某个菜单项操作时调用。是响应上下文菜单项操作的地方。
+		@Override
+		public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
+			switch (item.getItemId()) {
+			case R.id.menu_item_delete_crime:
+				CrimeAdapter adapter = (CrimeAdapter)getListAdapter();
+				CrimeLab crimeLab = CrimeLab.get(getActivity());
+				for (int i = adapter.getCount() - 1; i >= 0; i--) {
+					if (getListView().isItemChecked(i)) {
+						
+						crimeLab.delete(adapter.getItem(i));
+					}
+				}
+				mode.finish();
+				adapter.notifyDataSetChanged();
+				return true;
+
+			default:
+				return false;
+			}
+			
+		}
+		
+		@Override
+		public void onItemCheckedStateChanged(ActionMode mode, int position,
+				long id, boolean checked) {
+			
+		}
+	};
+	
+	
+	private OnItemLongClickListener onItemLongClickListener = new OnItemLongClickListener() {
+
+		@Override
+		public boolean onItemLongClick(AdapterView<?> parent, View view,
+				int position, long id) {
+			
+			
+			return false;
+		}
+	
+	
+	};
 }

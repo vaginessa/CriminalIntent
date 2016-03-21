@@ -16,6 +16,7 @@ import android.view.View;
 import android.widget.DatePicker;
 import android.widget.DatePicker.OnDateChangedListener;
 
+import com.actionbarsherlock.app.SherlockDialogFragment;
 import com.example.criminalintent.R;
 import com.example.criminalintent.R.layout;
 /**
@@ -25,7 +26,7 @@ import com.example.criminalintent.R.layout;
  * 生成日期：2016-3-17 <br/>
  * 描述：和其他fragment一样，DialogFragment实例也是由托管activity的FragmentManager管理着的。
  */
-public class DatePicketFragment extends DialogFragment {
+public class DatePicketFragment extends SherlockDialogFragment {
 
 	
 	public static final String EXTRA_DATE = "com.android.criminalintent.date";

@@ -170,3 +170,73 @@ android.os.Environment类的一些方法和常量进行判断。其次，获得�
 在Context类中找到获取方法）。接下来的数据写入实现可参照CriminalIntentJSONSerializer
 类的处理。
 17.3 深入学习：Android 文件系统与Java I/O
+
+第18章  上下文菜单与上下文操作模式
+	本章，我们将为应用实现长按列表项删除crime记录的功能。删除一条crime记录是一种上下
+文操作（contextual action），即它是与某个特定屏幕视图（单个列表项）而非整个屏幕相关联的。
+	对于上下文操作，还是定义一种菜单资源，但我们必须实现两组不同的回调方法，一组用于上下文操作栏，一组用于浮动上下文菜单。
+	（我们也许见过旧设备上运行的带有上下文操作栏的应用。通常来说，这些应用都是基于一
+个名为ActionBarSherlock的第三方库开发的。该库通过模仿复制为旧系统设备实现了上下文操作
+栏的功能。本章末尾我们将详细讨论ActionBarSherlock库的使用。）
+18.1 定义上下文菜单资源
+
+18.2 实施浮动上下文菜单
+	首先，我们来创建浮动上下文菜单。Fragment的回调方法类似于第16章中用于选项菜单的
+回调方法。要实例化生成一个上下文菜单，可使用以下方法：
+	public void onCreateContextMenu(ContextMenu menu,....){}
+	要响应用户的上下文菜单选择，可实现以下Fragment方法：
+	public boolena onContextItemSelected(MenuItem item);
+
+18.2.1 创建上下文菜单
+	在CrimeListFragment.java中，实现onCreateContextMenu(...)方法
+18.2.2 为上下文菜单登记视图
+	默认情况下，长按视图不会触发上下文菜单的创建。要触发菜单的创建，必须调用以下
+Fragment方法为浮动上下文菜单登记一个视图：
+	public void registerFroContextMenu(View view);
+	该方法需传入触发上下文菜单的视图。
+	在CriminalIntent应用里，我们希望点击任意列表项，都能弹出上下文菜单。这岂不是意味着
+需要逐个登记列表项视图吗？不用那么麻烦，直接登记ListView视图即可，然后它会自动登记
+各个列表项视图。
+18.2.3 响应菜单项选择
+	Delete菜单项要可用，需要一个能够从模型层删除crime数据的方法。在CrimeLab.java中，新
+增deleteCrime(Crime)方法。
+18.3 实施上下文操作模式
+	在新系统设备上，长按视图进入上下文操作模式是提供上下文操作的主流方式。屏幕进
+入上下文操作模式时，上下文菜单中定义的菜单项会出现在覆盖着操作栏的上下文操作栏上，如图
+18-3所示。相比浮动菜单，上下文操作栏不会遮挡屏幕，因此是更好的菜单展现方式。
+18.3.1 实现列表视图的多选操作
+	列表视图进入上下文操作模式时，可开启它的多选模式。多选模式下，上下文操作栏上的任
+何操作都将同时应用于所有已选视图。
+在CrimeListFragment.onCreateView(...) 方法中， 设置列表视图的选择模式为
+CHOICE_MODE_MULTIPLE_MODAL
+18.3.2 列表视图中的操作模式回调方法
+	接下来，为ListView设置一个实现AbsListView.MultiChoiceModeListener接口的监听
+器。该接口包含以下回调方法，视图在选中或撤销选中时会触发它
+	public abstract void onItemCheckedStateChanged(ActionMode mode,......)
+18.3.3 改变已激活视图的显示背景
+	依据自身的不同状态，有时需要差别化地显示某个视图。CriminalIntent应用中，在列表项处
+于激活状态时，我们希望能够改变其显示背景。视图处于激活状态，是指该视图已被用户标记为
+关注处理对象。
+	基于视图的状态，可使用state list drawable资源来改变其显示背景。state list drawable是一种
+以XML定义的资源。该资源定义中，我们指定一个drawable（位图或彩图），并列出该drawable
+对应的状态。（可查阅StateListDrawable参考手册页，了解更多视图相关状态。）
+18.3.4 实现其他视图的上下文操作模式
+	本章实现的上下文菜单栏可以完美地应用于ListView和GridView。（GridView是AdapterView
+的子类，第26章中会用到它。）但如果视图既非ListView，也非GridView，要使用上下文操作栏又该如何处理呢？
+	首先，设置一个实现View.OnLongClickListener接口的监听器。然后在监听器实现体内，
+调用Activity.startActionMode(...)方法创建一个ActionMode实例。（前面已经看到，如果使
+用的是MultiChoiceModeListener接口，ActionMode实例是自动创建的。）
+18.4 兼容性问题：回退还是复制
+	本章，我们已经用过一种叫做“优雅的回退”的兼容性策略。优雅的回退是指，应用在新系统
+平台上运行时，可自动使用新平台的特色功能及代码，而在旧系统平台上运行时，则回退使用早期
+的特色功能。从技术手段角度来说，这是通过在运行时检查SDK版本来实现的。
+18.6 深入学习：ActionBarSherlock
+	ActionBarSherlock（简称为ABS）旨在解决这种兼容性问题。ABS提供了一个向后兼容的操
+作栏版本。此外，它还提供了一些支持类，可根据不同的版本系统，确定是使用原生还是向后兼
+容版本的操作栏。可访问网站http://www.actionbarsherlock.com找到它。值得一提的是，它还提供
+了Android最新主题的向后兼容版本（包含操作栏）。
+	要下载ABS，请登陆网站http://www.actionbarsherlock.com/download.html，点击下载链接
+18.7 挑战练习：使用ActionBarSherlock
+18.7.1 CriminalIntent应用中ABS的基本整合
+18.7.2 ABS的深度整合
+18.7.3 ABS的完全整合

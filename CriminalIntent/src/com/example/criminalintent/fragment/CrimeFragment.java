@@ -14,7 +14,6 @@ import android.support.v4.app.NavUtils;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -23,6 +22,8 @@ import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.EditText;
 
+import com.actionbarsherlock.app.SherlockFragment;
+import com.actionbarsherlock.view.MenuItem;
 import com.example.criminalintent.R;
 import com.example.criminalintent.bean.Crime;
 import com.example.criminalintent.bean.CrimeLab;
@@ -39,7 +40,7 @@ import com.example.criminalintent.dialog.DatePicketFragment;
 /** 向处于运行状态的activity中添加fragment时，以下fragment生命周期方法会被依次调用：
 onAttach(Activity)、onCreate(Bundle)、 onCreateView(...)、onActivityCreated(Bundle)、
 onStart()，以及onResume()方法 **/
-public class CrimeFragment extends Fragment {
+public class CrimeFragment extends SherlockFragment {
 
 	public static final String EXTRA_CRIME_ID = "com.criminalintent.crime_id";
 	
@@ -91,7 +92,8 @@ public class CrimeFragment extends Fragment {
 			if (NavUtils.getParentActivityName(getActivity()) != null) {
 				
 				//启用应用图标向上导航按钮的功能，并在fragment视图上显示向左的图标
-				getActivity().getActionBar().setDisplayHomeAsUpEnabled(true);
+				//getActivity().getActionBar().setDisplayHomeAsUpEnabled(true);
+				getSherlockActivity().getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 			}
 		}
 		

@@ -86,6 +86,15 @@ public class CrimeLab {
 		
 		mCrimes.add(crime);
 	}
+	
+	/**
+	 * 从模型层删除crime数据的方法
+	 * @param c
+	 */
+	public void delete(Crime c){
+		
+		mCrimes.remove(c);
+	}
 	/**
 	 * 进行数据持久保存
 	 * @return

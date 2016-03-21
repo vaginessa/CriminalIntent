@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android" >
+    <!-- 。如android:state_activated
+的属性值设置为false，则只要视图未处于激活状态，android:drawable指定的资源都会被使用。 -->
+    <item 
+        android:state_activated="true"
+        android:drawable="@android:color/darker_gray">
+        
+    </item>
+
+</selector>

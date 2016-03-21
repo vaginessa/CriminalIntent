@@ -1,5 +1,7 @@
 package com.example.criminalintent;
 
+import com.actionbarsherlock.app.SherlockFragmentActivity;
+
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
@@ -14,7 +16,7 @@ import android.support.v4.app.FragmentTransaction;
  * activity都需要同样的代码。为避免不必要的重复性输入，我们将这
 些重复代码置入一个抽象类
  */
-public abstract class SingleFragmentActivity extends FragmentActivity {
+public abstract class SingleFragmentActivity extends SherlockFragmentActivity {
 
 	protected abstract Fragment createFragment();
 	
