@@ -1,12 +1,12 @@
 package com.example.criminalintent.bean;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.UUID;
 
-import com.example.criminalintent.R.id;
+import com.example.criminalintent.json.CriminalIntentJSONSerializer;
 
 import android.content.Context;
+import android.util.Log;
 
 /** 
  * 
@@ -16,6 +16,14 @@ import android.content.Context;
  * 描述：模型层犯罪数组
  */
 public class CrimeLab {
+	
+	//在CrimeLab类中进行数据持久保存
+	private static final String TAG = "CrimeLab";
+	private static final String FILENAME = "crimes.json";
+	
+	private CriminalIntentJSONSerializer mSerializer;
+	
+	
 	/**创建可容纳Crime对象的ArrayList**/
 	private ArrayList<Crime> mCrimes;
 	
@@ -25,7 +33,16 @@ public class CrimeLab {
 	public CrimeLab(Context mContext) {
 		
 		mAppContext = mContext;
-		mCrimes = new ArrayList<Crime>();
+		//mCrimes = new ArrayList<Crime>();
+		mSerializer = new CriminalIntentJSONSerializer(mAppContext, FILENAME);
+		
+		try {
+			//首先尝试加载crime数据
+			mCrimes = mSerializer.loadCrimes();
+		} catch (Exception e) {
+			
+			mCrimes = new  ArrayList<Crime>();
+		}
 		//100条假数据
 		/*for (int i = 0; i < 100; i++) {
 			Crime c = new Crime();
@@ -68,6 +85,21 @@ public class CrimeLab {
 	public void addCrime(Crime crime){
 		
 		mCrimes.add(crime);
+	}
+	/**
+	 * 进行数据持久保存
+	 * @return
+	 */
+	public boolean saveCrimes(){
+		
+		try {
+			mSerializer.saveCrimes(mCrimes);
+			Log.d(TAG, "crimes saved to file");
+			return true;
+		} catch (Exception e) {
+			Log.d(TAG, "Error saving crimes:",e);
+			return false;
+		}
 	}
 }
 

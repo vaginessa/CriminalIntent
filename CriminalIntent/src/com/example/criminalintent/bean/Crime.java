@@ -5,6 +5,9 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.UUID;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import android.text.format.DateFormat;
 
 /**
@@ -16,6 +19,13 @@ import android.text.format.DateFormat;
  */
 public class Crime {
 
+	//添加下列常量，然后实现toJSON()方法，以JSON格式保存Crime对象，并
+	//返回可放入JSONArray的JSONObject类实例
+	private static final String JSON_ID = "id";
+	private static final String JSON_TITLE = "title";
+	private static final String JSON_SOLVED = "solved";
+	private static final String JSON_DATE = "date";
+	
 	/** 生成唯一标识符 **/
 	private UUID mId;
 	/** 犯罪标题 **/
@@ -33,6 +43,22 @@ public class Crime {
 		format.format(mDate);
 	}
 
+	/**
+	 * 接受JSONObject对象的构造方法
+	 * @param json
+	 * @throws JSONException
+	 */
+	public Crime(JSONObject json)throws JSONException{
+		
+		mId = UUID.fromString(json.getString(JSON_ID));
+		if (json.has(JSON_TITLE)) {
+			
+		 mTitle = json.getString(JSON_TITLE);
+		}
+		
+		mSolved = json.getBoolean(JSON_SOLVED);
+		mDate = new Date(json.getLong(JSON_DATE));
+	}
 	public String getmTitle() {
 		return mTitle;
 	}
@@ -59,6 +85,24 @@ public class Crime {
 
 	public void setmSolved(boolean mSolved) {
 		this.mSolved = mSolved;
+	}
+	
+	
+	
+	/**
+	 * 将Crime对象数据转换为可写入JSON文件JSONObject对象数据
+	 * @return
+	 * @throws JSONException
+	 */
+	public JSONObject toJSON() throws JSONException{
+		
+		JSONObject json = new JSONObject();
+		json.put(JSON_ID, mId.toString());
+		json.put(JSON_TITLE, mTitle);
+		json.put(JSON_SOLVED, mSolved);
+		json.put(JSON_DATE, mDate.getTime());
+		
+		return json;
 	}
 	
 	@Override

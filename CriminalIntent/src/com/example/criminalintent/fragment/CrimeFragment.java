@@ -230,4 +230,13 @@ public class CrimeFragment extends Fragment {
 		}
 		
 	}
+	
+	/**
+	 * 保存数据
+	 */
+	@Override
+	public void onPause() {
+		super.onPause();
+		CrimeLab.get(getActivity()).saveCrimes();
+	}
 }
