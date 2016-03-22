@@ -240,3 +240,113 @@ CHOICE_MODE_MULTIPLE_MODAL
 18.7.1 CriminalIntent应用中ABS的基本整合
 18.7.2 ABS的深度整合
 18.7.3 ABS的完全整合
+
+第19章 相机I：取景器
+	我们可以通过隐式intent与照相机进行交互。大多数Android设备都会内置相
+机应用。相机应用会自动侦听由MediaStore.ACTION_IMAGE_CAPTURE创建的intent。
+	在大多数设备上，隐式intent的相机接口有一个bug， 会导致用户
+无法保存全尺寸的照片。因此，对于那些只需要缩略图的应用来说，隐式intent完全可以满足要
+求。然而，CriminalIntent应用需要的是全尺寸的作案现场图片，别无选择，我们只能去学习使用
+Camera API了。
+	本章将要创建一个基于fragment的activity，然后使用SurfaceView类配合相机硬件来实时展
+示现场的视频预览。
+	Camera实例提供了对设备相机硬件级别的调用。相机是一种独占性资源：一次只能有一个
+activity能够调用相机。
+	SurfaceView实例是相机的取景器。SurfaceView是一种特殊的视图，可直接将要显示的内
+容渲染输出到设备的屏幕上。
+19.1 创建Fragment 布局
+19.2 创建CrimeCameraFragment
+19.3 创建CrimeCameraActivity
+19.4 使用相机API
+19.4.1 打开并释放相机
+	首先，来进行相机资源的管理。我们已经在CrimeCameraFragment中添加了一个Camera实
+例。相机是一种系统级别的重要资源，因此，很关键的一点就是，需要时使用，用完及时释放。
+如果忘记释放，除非重启设备，否则其他应用将无法使用相机。
+	以下是将要用来管理Camera实例的方法：
+	public static Camera open(int cameraId)
+	public static Camera open()
+	public static void release()
+	其中open(int)方法是在API级别第9级引入的，因此，如果设备的API级别小于第9级，那么
+就只能使用不带参数的open()方法。
+	在CrimeCameraFragment生命周期中，我们应该在onResume()和onPause()回调方法中打
+开和释放相机资源
+19.4.2 SurfaceView、SurfaceHolder与Surface
+	SurfaceView类实现了SurfaceHolder接口。在CrimeCameraFragment.java中，增加以下代码
+获取SurfaceView的SurfaceHolder实例.
+	SurfaceHolder是我们与Surface对象联系的纽带。Surface对象代表着原始像素数据的缓
+冲区。
+	Surface对象也有生命周期：SurfaceView出现在屏幕上时，会创建Surface；SurfaceView
+从屏幕上消失时，Surface随即被销毁。Surface不存在时，必须保证没有任何内容要在它上面
+绘制。
+	不像其他视图对象，SurfaceView及其协同工作对象都不会自我绘制内容。对于任何想将内
+容绘制到Surface缓冲区的对象，我们称其为Surface的客户端。在CrimeCameraFragment类中，
+Camera实例是Surface的客户端。
+	记住，Surface不存在时，必须保证没有任何内容要在Surface的缓冲区中绘制。图19-6展
+示了需要处理的两种可能情况，Surface创建完成后，需要将Camera连接到SurfaceHolder上；
+Surface销毁后，再将Camera从SurfaceHolder上断开。
+为完成以上任务，SurfaceHolder提供了另一个接口：SurfaceHolder.Callback。该接口
+监听Surface生命周期中的事件，这样就可以控制Surface与其客户端协同工作。
+以下是SurfaceHolder.Callback接口中的三个方法。
+	public abstract void surfaceCreated(SurfaceHolder holder)
+包含SurfaceView的视图层级结构被放到屏幕上时调用该方法。这里也是Surface与其客
+户端进行关联的地方。
+	public abstract void surfaceChanged(SurfaceHolder holder, int format, int
+width, int height)
+Surface首次显示在屏幕上时调用该方法。通过传入的参数，可以知道Surface的像素格
+式以及它的宽度和高度。该方法内可以通知Surface的客户端，有多大的绘制区域可以
+使用。
+	public abstract void surfaceDestroyed(SurfaceHolder holder)
+SurfaceView从屏幕上移除时，Surface也随即被销毁。通过该方法，可以通知Surface
+的客户端停止使用Surface。
+	以下是用来响应Surface生命周期事件的三个Camera方法。
+	public final void setPreviewDisplay(SurfaceHolder holder)
+该方法用来连接Camera与Surface。我们将在surfaceCreated()方法中调用它。
+	public final void startPreview()
+该方法用来在Surface上绘制帧。我们将在surfaceChanged(...)方法中调用它。
+	public final void stopPreview()
+该方法用来停止在Surface上绘制帧。我们将在surfaceDestroyed()方法中调用它。
+19.4.3 确定预览界面大小
+19.4.4 启动CrimeCameraActivity
+检查设备是否带有相机
+	对于不带相机的设备，拍照按钮（mPhotoButton）应该禁用。可以查询PackageManager
+确认设备是否带有相机。
+	获取到PackageManager后，调用hasSystemFeature(String)方法并传入表示设备特色功
+能的常量。FEATURE_CAMERA常量代表后置相机，而FEATURE_CAMERA_FRONT常量代表前置相机。
+隐藏状态栏和操作栏
+	activity的操作栏和状态栏遮挡了部分取景器窗口。一般来说，用户只关注
+取景器中的画面，而且也不会在拍照界面停留很久，因此，操作栏和状态栏不仅没有什么用处，
+甚至还会妨碍拍照取景，如果能隐藏它们那最好不过了。
+	有趣的是，我们只能在CrimeCameraActivity中而不能在CrimeCameraFragment中隐藏操
+作栏和状态栏。
+	为什么必须在activity中实现隐藏呢？在调用Activity.setContentView(...)方法（该方
+法是在CrimeCameraActivity类的onCreate(Bundle)超类版本方法中被调用的。）创建activity
+视图之前，就必须调用requestWindowFeature(...)方法及addFlags(...)方法。而fragment
+无法在其托管activity视图创建之前添加，因此，必须在activity里调用隐藏操作栏和状态栏的相关
+方法。
+19.5 深入学习：以命令行的方式运行activity
+	本章，通过在CrimeFragment界面添加拍照按钮启动CrimeCameraActivity，我们可以快
+速地测试相机调用代码。不过，有时候，在activity代码整合到应用之前，我们可能就需要测试新
+activity代码。
+Android 提供的一个快捷但不完善的方法是： 修改配置文件中activity 声明节点的
+<intent-filter>元素设置，替换启动activity为需要测试的activity。这样，应用启动时，要测试
+的activity就会出现。然而，这种方法有个缺点：在恢复原来的启动activity之前，可能不能使用应
+用的其他一些功能。
+	实际开发时，替换启动activity的方式并不一定总是合适的。例如，共同开发同一应用时，修
+改启动activity的方式就会给团队其他人员的测试带来麻烦，令人生厌。不过，Android考虑得很
+全面，它还提供了另外一种好办法：使用adb工具从命令行启动activity。
+	要从命令行启动activity，首先要导出activity。打开AndroidManifest.xml配置文件，将下列属
+性设置添加到CrimeCameraActivity的activity声明中：
+	android:exported = "true"
+	默认情况下，某个应用的activity只能从自己的应用里启动。将android:exported属性值设
+为true相当于告诉Android，其他应用也可以启动指定应用的activity。（如果将intent过滤器添加
+到activity的声明中，该activity的android:exported属性值会被自动设为true。）
+接下来，在Android SDK安装目录的platform-tools子目录下找到adb工具。建议将platform-tools
+和tools子目录添加到命令行shell的路径中
+	adb工具（Android Debug Bridge）。使用adb工具可以完成很多原来一直由
+Eclipse处理的事情。例如，监控LogCat，在设备上打开shell，浏览文件系统，上传下载文件，列
+出已连接设备以及重置adb。真是一个实用的好工具。
+	然后使用下列神奇的语句从命令行启动CrimeCameraActivity。
+	adb shell am start -n com.example.criminalintent/.CrimeCameraActivity
+	am（activity manager）是一个在设备上运行的命令行程序。它支持启动和停止Android组件
+（component）并从命令行发送intent。可以运行adb shell am指令，查看am工具能够完成的所有
+任务。

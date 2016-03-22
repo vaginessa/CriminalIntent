@@ -5,6 +5,8 @@ import java.util.UUID;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.hardware.Camera;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -15,15 +17,18 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
+import android.widget.ImageButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.EditText;
 
 import com.actionbarsherlock.app.SherlockFragment;
 import com.actionbarsherlock.view.MenuItem;
+import com.example.criminalintent.CrimeCameraActivity;
 import com.example.criminalintent.R;
 import com.example.criminalintent.bean.Crime;
 import com.example.criminalintent.bean.CrimeLab;
@@ -57,6 +62,10 @@ public class CrimeFragment extends SherlockFragment {
 	private Button mDateButton;
 	
 	private CheckBox mSolvedCheckBox;
+	/**
+	 * 启动CrimeCameraActivity
+	 */
+	private ImageButton mPhotoButton;
 	
 	/** 首先，Fragment.onCreate(Bundle)是公共方法，而Activity.onCreate(Bundle)是保护
 方法。因为需要被托管fragment的任何activity调用 **/
@@ -105,7 +114,8 @@ public class CrimeFragment extends SherlockFragment {
 		//mDateButton.setText(mCrime.getmDate().toString());
 		//mDateButton.setEnabled(false);
 		updateDate();
-		mDateButton.setOnClickListener(new View.OnClickListener() {
+		mDateButton.setOnClickListener(onClickListener);
+		/*mDateButton.setOnClickListener(new View.OnClickListener() {
 			
 			@Override
 			public void onClick(View v) {
@@ -122,11 +132,27 @@ public class CrimeFragment extends SherlockFragment {
 				dialog.show(fm, DIALOG_DATE);
 				
 			}
-		});
+		});*/
 		
 		mSolvedCheckBox = (CheckBox) view.findViewById(R.id.crime_solved);
 		mSolvedCheckBox.setChecked(mCrime.ismSolved());
 		mSolvedCheckBox.setOnCheckedChangeListener(onChecked);
+		
+		//启动相机
+		mPhotoButton = (ImageButton)view.findViewById(R.id.crime_imageButton);
+		mPhotoButton.setOnClickListener(onClickListener);
+		//对于不带相机的设备，拍照按钮（mPhotoButton）应该禁用。可以查询PackageManager确认设备是否带有相机
+		//FEATURE_CAMERA常量代表后置相机，而FEATURE_CAMERA_FRONT常量代表前置相机。
+		PackageManager pm = getActivity().getPackageManager();
+		boolean hasACamera = pm.hasSystemFeature(PackageManager.FEATURE_CAMERA)
+							 || pm.hasSystemFeature(PackageManager.FEATURE_CAMERA_FRONT)
+							 || Build.VERSION.SDK_INT < Build.VERSION_CODES.GINGERBREAD
+							 || Camera.getNumberOfCameras() > 0;
+							 
+		if (!hasACamera) {
+			
+			mPhotoButton.setEnabled(false);
+		}
 		
 		return view;
 	}
@@ -241,4 +267,30 @@ public class CrimeFragment extends SherlockFragment {
 		super.onPause();
 		CrimeLab.get(getActivity()).saveCrimes();
 	}
+	
+	private OnClickListener onClickListener = new OnClickListener() {
+		
+		@Override
+		public void onClick(View v) {
+			switch (v.getId()) {
+			case R.id.crime_date:
+				FragmentManager fm = getActivity().getSupportFragmentManager();
+				
+				//DatePicketFragment dialog = new DatePicketFragment();
+				DatePicketFragment dialog = DatePicketFragment.newInstance(mCrime.getmDate());
+				//设置目标fragment,可将CrimeFragment设置成DatePickerFragment的目标fragment，建立关联，类似于传入startActivityForResult(...)
+				//该方法接受目标fragment以及一个类似于传入startActivityForResult(...)方法的请求
+				//代码作为参数
+				dialog.setTargetFragment(CrimeFragment.this, REQUEST_DATE);
+				//要将DialogFragment添加给FragmentManager管理并放置到屏幕上，可调用fragment实例show方法
+				dialog.show(fm, DIALOG_DATE);
+				break;
+			case R.id.crime_imageButton://启动相机
+				Intent intent = new Intent(getActivity(), CrimeCameraActivity.class);
+				startActivity(intent);
+				break;
+			}
+			
+		}
+	};
 }
