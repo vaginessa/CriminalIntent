@@ -41,7 +41,6 @@ import com.example.criminalintent.dialog.DatePicketFragment;
  * 描述：本类是与模型及视图对象交互的控制器，用于显示特定crime的明细信息，并在
 用户修改这些信息后立即进行内容更新
  */
-
 /** 向处于运行状态的activity中添加fragment时，以下fragment生命周期方法会被依次调用：
 onAttach(Activity)、onCreate(Bundle)、 onCreateView(...)、onActivityCreated(Bundle)、
 onStart()，以及onResume()方法 **/
@@ -67,6 +66,34 @@ public class CrimeFragment extends SherlockFragment {
 	 */
 	private ImageButton mPhotoButton;
 	
+	private Callbacks mCallbacks;
+	
+	/**
+	 * 添加回调方法接口以及mCallbacks成员变量并实现
+onAttach(...)和onDetach()方法
+	 * 
+	 * 版权：融贯资讯 <br/>
+	 * 作者：wei.miao@rogrand.com <br/>
+	 * 生成日期：2016-3-22 <br/>
+	 * 描述：
+	 */
+	public interface Callbacks{
+		
+		void onCriemUpdate(Crime crime);
+	}
+	
+	
+	@Override
+	public void onAttach(Activity activity) {
+		super.onAttach(activity);
+		mCallbacks = (Callbacks)activity;
+	}
+	
+	@Override
+	public void onDetach() {
+		super.onDetach();
+		mCallbacks = null;
+	}
 	/** 首先，Fragment.onCreate(Bundle)是公共方法，而Activity.onCreate(Bundle)是保护
 方法。因为需要被托管fragment的任何activity调用 **/
 	//配置fragment实例
@@ -165,6 +192,8 @@ public class CrimeFragment extends SherlockFragment {
 		public void onTextChanged(CharSequence s, int start, int before, int count) {
 			
 			mCrime.setmTitle(s.toString());
+			//如果Crime对象的标题或问题处理状态发生改变，触发调用onCrimeUpdated(Crime)方法
+			mCallbacks.onCriemUpdate(mCrime);
 		}
 		
 		@Override
@@ -185,6 +214,7 @@ public class CrimeFragment extends SherlockFragment {
 		public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
 			
 			mCrime.setmSolved(isChecked);
+			mCallbacks.onCriemUpdate(mCrime);
 			
 		}
 	};
@@ -226,6 +256,8 @@ public class CrimeFragment extends SherlockFragment {
 			Date date = (Date)data.getSerializableExtra(DatePicketFragment.EXTRA_DATE);
 			mCrime.setmDate(date);
 			//mDateButton.setText(mCrime.getmDate().toString());
+			//在onActivityResult(...)方法中，Crime对象的记录日期、现场照片以及嫌疑人都有可能修改，因此，还需在该方法中调用onCrimeUpdated(Crime)方法
+			mCallbacks.onCriemUpdate(mCrime);
 			updateDate();
 			
 		}

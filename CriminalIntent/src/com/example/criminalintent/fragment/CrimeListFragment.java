@@ -2,26 +2,26 @@ package com.example.criminalintent.fragment;
 
 import java.util.ArrayList;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.ActionMode;
 import android.view.ContextMenu;
+import android.view.ContextMenu.ContextMenuInfo;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ContextMenu.ContextMenuInfo;
 import android.widget.AbsListView.MultiChoiceModeListener;
 import android.widget.AdapterView;
+import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.ListView;
-import android.widget.AdapterView.AdapterContextMenuInfo;
 
 import com.actionbarsherlock.app.SherlockListFragment;
-import com.example.criminalintent.CrimePagerActivity;
 import com.example.criminalintent.R;
 import com.example.criminalintent.adapter.CrimeAdapter;
 import com.example.criminalintent.bean.Crime;
@@ -49,6 +49,45 @@ public class CrimeListFragment extends SherlockListFragment {
 CrimeListFragment并对变量进行初始化
 	 */
 	private boolean mSubtitleVisible;
+	/**
+	 * 添加一个Callbacks接口。另外再添加一个mCallbacks变量并覆
+盖onAttach(Activity)和onDetach()方法，完成变量的赋值与清空
+	 */
+	private Callbacks mCallbacks;
+	
+	/**
+	 * 为保持fragment的独立性，我们可以在fragment中定义回调接口，委托托管activity来完成那些不
+应由fragment处理的任务。托管activity将实现回调接口，履行托管fragment的任务。
+	 * 
+	 * 版权：融贯资讯 <br/>
+	 * 作者：wei.miao@rogrand.com <br/>
+	 * 生成日期：2016-3-22 <br/>
+	 * 描述：
+	 */
+	public interface Callbacks{
+		
+		void onCrimeSelected(Crime crime);
+	}
+	
+	/**
+	 * 用来重新加载刷新CrimeListFragment列表
+	 */
+	public void updateUI(){
+		
+		((CrimeAdapter)getListAdapter()).notifyDataSetChanged();
+	}
+	
+	@Override
+	public void onAttach(Activity activity) {
+		super.onAttach(activity);
+		mCallbacks = (Callbacks)activity;
+	}
+	
+	@Override
+	public void onDetach() {
+		super.onDetach();
+		mCallbacks = null;
+	}
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -124,9 +163,11 @@ CrimeListFragment并对变量进行初始化
 	
 		//废弃使用CrimeActivity，我们来配置使用CrimePagerActivity
 		
-		Intent intent = new Intent(getActivity(),CrimePagerActivity.class);
+		/*Intent intent = new Intent(getActivity(),CrimePagerActivity.class);
 		intent.putExtra(CrimeFragment.EXTRA_CRIME_ID, crime.getmId());
-		startActivity(intent);
+		startActivity(intent);*/
+		//调用全部回调方法
+		mCallbacks.onCrimeSelected(crime);
 	}
 	
 	@Override
@@ -171,9 +212,15 @@ CrimeListFragment并对变量进行初始化
 		case R.id.menu_item_new_crime:
 			Crime crime = new Crime();
 			CrimeLab.get(getActivity()).addCrime(crime);
-			Intent intent = new Intent(getActivity(), CrimePagerActivity.class);
+			
+			/*Intent intent = new Intent(getActivity(), CrimePagerActivity.class);
 			intent.putExtra(CrimeFragment.EXTRA_CRIME_ID, crime.getmId());
-			startActivityForResult(intent, 0);
+			startActivityForResult(intent, 0);*/
+			
+			//只要新增一项crime记录，就会立即重新加载crime列表
+			((CrimeAdapter)getListAdapter()).notifyDataSetChanged();
+			mCallbacks.onCrimeSelected(crime);
+			
 			return true;
 		case R.id.menu_item_show_subtitle:
 			//切换菜单项标题,实现显示或隐藏CrimeListActivity操作栏的子标题

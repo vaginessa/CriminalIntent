@@ -350,3 +350,81 @@ Eclipse处理的事情。例如，监控LogCat，在设备上打开shell，浏�
 	am（activity manager）是一个在设备上运行的命令行程序。它支持启动和停止Android组件
 （component）并从命令行发送intent。可以运行adb shell am指令，查看am工具能够完成的所有
 任务。
+
+第22章  Master-Detail用户界面
+	本章将为CriminalIntent应用打造适应平板设备的用户界面，让用户能同时查看到列表和明细
+界面并与它们进行交互。
+22.1 增加布局灵活性
+	在手机设备上，CrimeListActivity生成的是单版面（single-pane）布局。而在平板设备上，
+为同时显示主从视图，我们需要它生成双版面（two-pane）布局。
+	在双版面布局中，CrimeListActivity将同时托管CrimeListFragment和CrimeFragment
+	要实现双版面布局，需执行如下操作步骤：
+ 修改SingleFragmentActivity，不再硬编码实例化布局；
+ 创建包含两个fragment容器的布局；
+ 修改CrimeListActivity，实现在手机设备上实例化单版面布局，而在平板设备上实例
+化双版面布局。
+22.1.1 修改SingleFragmentActivity
+22.1.2 创建包含两个fragment容器的布局
+22.1.3 使用别名资源
+	别名资源是一种指向其他资源的特殊资源。它存放在res/values/目录下，并按照约定定义在
+refs.xml文件中。
+	创建平板设备专用可选资源
+	配置修饰符-sw600dp是什么意思？SW是smallest width（最小宽度）的缩写，虽然字面上是
+宽度的含义，但它实际指的是屏幕的最小尺寸（dimension），因而SW与设备的当前方向无关。
+在确定可选资源时，-sw600dp配置修饰符表明：对任何最小尺寸为600dp或更高dp的设备，
+都使用该资源。对于指定平板的屏幕尺寸规格来说，这是一种非常好的做法。
+	需要说明的是，Android 3.2中才引入了最小宽度配置修饰符。这意味着，运行Android 3.0或
+Android 3.1系统的平板设备无法识别它。
+为解决该问题，可以增加另一种使用-xlarge（仅适用于Android 3.2以前的版本）屏幕尺寸
+修饰符的可选资源。
+右键单击res/目录，新建一个名为values-xlarge的目录。然后将res/values-sw600dp/refs.xml资
+源文件复制到新建的res/values-xlarge/目录中。
+	配置修饰符-xlarge包含的资源适用于最低尺寸为720×960dp的设备。该修饰符仅适用于运
+行Android 3.2之前版本的设备。Android 3.2及之后的系统版本会自动找到并使用-sw600dp修饰符
+目录下的资源。
+22.2 Activity：fragment 的托管者
+	既然单双版面的布局显示已处理完成，我们来着手添加CrimeFragment给crime明细fragment
+容器，让CrimeListActivity可以展示一个完整的双版面用户界面。
+	我们的第一反应可能会认为， 只需再为平板设备实现一个CrimeListFragment.
+onListItemClick(...)监听器方法就行了。这样，无需启动新的CrimePagerActivity，
+onListItemClick(...)方法会获取CrimeListActivity的FragmentManager，然后提交一个
+fragment事务，将CrimeFragment添加到明细fragment容器中。
+	以上设想虽然行的通，但做法很老套。fragment天生是一种独立的开发构件。如果要开发一
+个fragment用来添加其他fragment到activity的FragmentManager，那么这个fragment就必须知道托
+管activity是如何工作的，这样一来，该fragment就再也无法作为独立的开发构件来使用了。
+	CrimeListFragment将CrimeFragment添加给了CrimeListActivity，并
+且它知道CrimeListActivity的布局里包含有一个detailFragmentContainer。但实际上，
+CrimeListFragment根本就不应关心这些，这都是它的托管activity应该处理的事情。
+为保持fragment的独立性，我们可以在fragment中定义回调接口，委托托管activity来完成那些不
+应由fragment处理的任务。托管activity将实现回调接口，履行托管fragment的任务。
+	fragment回调接口
+	为委托工作任务给托管activity，通常的做法是由fragment定义名为Callbacks的回调接口。
+回调接口定义了fragment委托给托管activity处理的工作任务。任何打算托管目标fragment的
+activity必须实现这些定义的接口。
+	有了回调接口，无需知道自己的托管者是谁，fragment可以直接调用托管activity的方法。
+实现CrimeListFragment.Callbacks回调接口
+	在CrimeListFragment.java中，添加一个Callbacks接口。另外再添加一个mCallbacks变量并覆
+盖onAttach(Activity)和onDetach()方法，完成变量的赋值与清空.
+	现在，CrimeListFragment有了调用托管activity方法的途径。另外，它也不关心托管activity
+是谁。只要托管activity实现了CrimeListFragment.Callbacks接口，而CrimeListFragment中
+一切代码行为都保持不变。
+	
+	最后， 在CrimeListFragment类中，在启动新的CrimePagerActivity的地方， 调用
+onCrimeSelected(Crime)方法
+	在onOptionsItemSelected(...)方法中调用回调方法时，只要新增一项crime记录，就会立
+即重新加载crime列表。这很有必要，因为在平板设备上，新增crime记录后，crime列表依然可见。
+	然而，如果修改crime明细内容，列表项并不会以最新数据刷新显示。当前，在CrimeList-
+Fragment.onResume()方法中，只有新添加一项crime 记录，我们才能立即重新刷新显示列表项
+界面。但是，在平板设备上，CrimeListFragment和CrimeFragment将会同时可见。因此，当
+CrimeFragment出现时，CrimeListFragment不会暂停，自然也就永远不会从暂停状态恢复了。
+这就是crime列表项不能重新加载刷新的根本原因。
+	下面，我们将在CrimeFragment中添加另一个回调接口来修正该问题。
+	CrimeFragment.Callbacks回调接口的实现
+	保存crime记录的修改时，CrimeFragment类都将调用托管activity的onCrimeUpdated
+(Crime)方法。CrimeListActivity类将会实现onCrimeUpdated(Crime)方法，从而重新加载
+CrimeListFragment的列表。
+	实现CrimeFragment的接口之前，首先在CrimeListFragment类中新增一个方法，用来重
+新加载刷新CrimeListFragment列表
+	在CrimeFragment.java中，如果Crime对象的标题或问题处理状态发生改变，触发调用
+onCrimeUpdated(Crime)方法
+	在onActivityResult(...)方法中，Crime对象的记录日期、现场照片以及嫌疑人都有可能修改，因此，还需在该方法中调用onCrimeUpdated(Crime)方法

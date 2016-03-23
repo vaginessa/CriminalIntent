@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 别名资源 -->
+<!-- 用于Android 3.2之前版本的可选资源 -->
+<resources>
+    <item name="activity_masterdetail" type="layout">@layout/activity_twopane</item>
+</resources>

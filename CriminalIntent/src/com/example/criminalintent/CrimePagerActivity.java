@@ -5,7 +5,6 @@ import java.util.UUID;
 
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.ViewPager;
@@ -23,7 +22,7 @@ import com.example.criminalintent.fragment.CrimeFragment;
  * 描述：将取代CrimeActivity。其布局将由一个ViewPager组成。
  *  其任务是创建并管理ViewPager
  */
-public class CrimePagerActivity extends SherlockFragmentActivity {
+public class CrimePagerActivity extends SherlockFragmentActivity implements CrimeFragment.Callbacks{
 	//可通过调用setOffscreenPageLimit(int)方法，定制预加载相邻页面的数目
 	private ViewPager mViewPager;
 	private ArrayList<Crime> mCrimes;
@@ -102,6 +101,20 @@ public class CrimePagerActivity extends SherlockFragmentActivity {
 			}
 		}
 	
+	}
+
+	/**
+	 * 任何托管CrimeFragment的activity
+	 * 都必须实现CrimeFragment.Callbacks接口。因此，我们还需要在CrimePagerActivity类中
+	 * 实现CrimeFragment.Callbacks接口。
+	 * 
+	 * 对于CrimePagerActivity类，onCrimeUpdated(Crime)方法什么都不用做
+	 * 
+	 * CrimePagerActivity类托管CrimeFragment时，必 需的列表加载刷新已经在OnResume()方法中完成了。
+	 */
+	@Override
+	public void onCriemUpdate(Crime crime) {
+		
 	}
 	
 }

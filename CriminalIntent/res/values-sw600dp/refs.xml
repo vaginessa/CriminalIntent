@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 别名资源资源ID依然归属于R.layout内部类 -->
+<!-- 对任何最小尺寸为600dp或更高dp的设备,都使用该资源 -->
+<resources>
+    <item name="activity_masterdetail" type="layout">@layout/activity_twopane</item>
+</resources>

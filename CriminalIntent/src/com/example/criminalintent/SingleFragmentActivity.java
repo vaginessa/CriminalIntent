@@ -20,11 +20,21 @@ public abstract class SingleFragmentActivity extends SherlockFragmentActivity {
 
 	protected abstract Fragment createFragment();
 	
+	/**
+	 * 为使SingleFragmentActivity类更加抽象、灵
+	活，我们让它的子类自己提供布局资源ID。
+	 * 添加一个protected方法，返回activity需要的布局资源ID
+	 * @return
+	 */
+	protected int  getLayoutResId() {
+		return R.layout.activity_fragment;
+	}
 	@Override
 	protected void onCreate(Bundle arg0) {
 		super.onCreate(arg0);
 		
-		setContentView(R.layout.activity_fragment);
+		//setContentView(R.layout.activity_fragment);
+		setContentView(getLayoutResId());
 		FragmentManager fm = getSupportFragmentManager();
 		Fragment fragment = fm.findFragmentById(R.id.fragmentContainer);
 		if (fragment== null) {
